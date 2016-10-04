@@ -1,15 +1,10 @@
 @extends('layout.default')
 @section('content')
-<div class = "row summernote">
-{{article->content}}
+<div class = "container">
+<div class = "row">
+{!!$article->content!!}
 </div>
-<script>
-$('#summernote').summernote({
-  height: 300,                 // set editor height
-  minHeight: null,             // set minimum height of editor
-  maxHeight: null,             // set maximum height of editor
-  focus: true                  // set focus to editable area after initializing summernote
-});
-</script>
+</div>
+<a href="{{ route('article.index') }}" class="btn btn-warning">Back To Index</a> <br/><br/> 
 @stop
 

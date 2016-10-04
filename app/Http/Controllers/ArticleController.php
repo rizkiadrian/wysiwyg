@@ -27,7 +27,7 @@ class ArticleController extends Controller
      */
     public function create()
     {
-        //
+         return view('content.create');
     }
 
     /**
@@ -69,6 +69,7 @@ class ArticleController extends Controller
         } // <!-
         $article->content = $dom->saveHTML();
         $article->save();
+        return redirect()->route('article.index');
 
 }
 
@@ -92,7 +93,8 @@ class ArticleController extends Controller
      */
     public function edit($id)
     {
-        //
+        $article = Article::findOrFail($id);
+        return view('content.edit', compact('article'));
     }
 
     /**
@@ -104,7 +106,38 @@ class ArticleController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $article = Article::findOrFail($id);
+        $message = $request->input('content');
+        $article->title = $request->title;
+        $dom = new \    DomDocument();
+        $dom->loadHtml($message, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);    
+        $images = $dom->getElementsByTagName('img');
+       // foreach <img> in the submited message
+        foreach($images as $img){
+            $src = $img->getAttribute('src');
+            
+            // if the img source is 'data-url'
+            if(preg_match('/data:image/', $src)){                
+                // get the mimetype
+                preg_match('/data:image\/(?<mime>.*?)\;/', $src, $groups);
+                $mimetype = $groups['mime'];                
+                // Generating a random filename
+                $filename = uniqid();
+                $filepath = "\summernoteimage\\$filename.$mimetype";    
+                // @see http://image.intervention.io/api/
+                $image = Image::make($src)
+                  // resize if required
+                   ->resize(300, 200) 
+                  ->encode($mimetype, 100)  // encode file to the specified mimetype
+                  ->save(public_path().$filepath);                
+                $new_src = asset($filepath);
+                $img->removeAttribute('src');
+                $img->setAttribute('src', $new_src);
+            } // <!--endif
+        } // <!-
+        $article->content = $dom->saveHTML();
+        $article->save();
+        return redirect()->route('article.index');
     }
 
     /**
@@ -115,6 +148,8 @@ class ArticleController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $article = Article::findOrFail($id);
+        $article->delete();
+        return redirect()->route('article.index');
     }
 }
